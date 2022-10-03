@@ -1,0 +1,74 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+
+        <title>My scratchboard page</title>
+    </head>
+
+    <body>
+        <nav class="navbar navbar-inverse">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">My scratch</a>
+                </div>
+
+                 <!-- show login/logout button based on if there is an authenticated user -->
+                <ul class="nav navbar-nav navbar-right">
+                    {% if current_user.is_authenticated %}
+                        <li><a href="{{ url_for('logout') }}">Log out</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('login') }}">Log in</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+
+        <div class="container">
+
+            <!-- Iterate through each commment in comments List from python file, create a div section for each -->
+            <!-- curly bracket% is the command in Flask template language for if statements, double curly bracket is the command for printing the value of a variable -->
+            {% for notif in comments %}
+                <div class="row" style="margin-bottom: 1ex">
+                    <div>
+                        username:       {{ notif.user.username }} <br>
+                        start_time:     {{ notif.start_time.strftime("%A, %B %d %Y at %I:%M%p")}}<br>
+                        run_method:     {{ notif.run_method }} <br>
+                        message_key:    {{ notif.message_key }} <br>
+                        warning_count:  {{notif.warning_count}}<br><br>
+                    </div>
+
+                </div>
+            {% endfor %}
+
+
+            <!-- ONLY if there is a logged in user, display the input text area to post a comment! Otherwise it doesn't show since we only want users to be able to post! -->
+            {% if current_user.is_authenticated %}  <!-- current_user is a User object of the current logged in User from Flask-Login -->
+
+                <div class="row">
+                    <form action="." method="POST">
+                        <textarea class="form-control" name="start_time" placeholder="Enter a scheduled time"></textarea> <br>
+
+                        <textarea class="form-control" name="run_method" placeholder="Enter method name to run"></textarea><br>
+
+                        <textarea class="form-control" name="message_key" placeholder="Enter the message key if applicable"></textarea><br>
+
+                        <textarea class="form-control" name="warning_count" placeholder="Enter the amount of warnings"></textarea><br>
+
+                        <input type="submit" class="btn btn-success" value="Send entry">
+                    </form>
+                </div>
+            {% endif %}
+
+        </div>  <!-- /.container -->
+    </body>
+</html>

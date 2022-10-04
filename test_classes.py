@@ -346,29 +346,11 @@ class Day:
         self.label = label
         self.limit_hrs = limit_hrs      # max # of hrs that can worked this day
         self.shift_buffer = shift_buffer    # min. amount of time in minutes allowed between consecutive Shifts, e.g. buffer = 30 min, shift 1 = 8:00am --> shift 2 must be >= 8:30am
-
-
         self.unavailable = unavailability           #list of tuples, used to JUST save and reference the Day's unavailability for is_work = True Shifts! --> used in scheduling to determine what hrs are available to different Shifts (is_work = True/False)
-
-
         self.avail_range = {}
         self.nonwork_avail_range = {}   #same as avail_range, but EXCLUSIVELY avail only to Shifts who's is_work = False --> able to schedule non-work events during unavailability, initialized to all unavailable times
 
         self.init_avail_range()
-        #Populate unavailable:
-        #for shift in sched_shifts:
-        #    if shift.label == "Unavailability":
-        #        self.unavailable.append((shift.start_time, shift.end_time))
-
-        #Initialize nonwork_avail_range now that Day.unavailable is initialized:
-        #for tuple in self.unavailable:
-        #    start_time = tuple[0]
-        #    end_time = tuple[1]
-
-        #     time_counter = start_time
-        #    while time_counter <= end_time:
-        #        self.nonwork_avail_range[time_counter.strftime('%I:%M%p')] = True
-        #        time_counter = time_counter + timedelta(minutes=self.shift_buffer)       #add buffer minutes to it
 
         #Populate the shifts now that nonwork_avail_range is also init with avail_range:
         for shift in sched_shifts:
@@ -377,7 +359,6 @@ class Day:
 
     #Purpose: initializes self.avail_range with all possible times of the day (12am - 12am) using the given shift_buffer:
     def init_avail_range(self):
-
         start_time_str = self.label + " 12:00am"
         time_counter = datetime.strptime(start_time_str, '%m/%d/%y %I:%M%p')
         next_day = datetime.strptime(self.label, '%m/%d/%y') + timedelta(days=1)
@@ -391,7 +372,6 @@ class Day:
             time_counter = time_counter + timedelta(minutes=self.shift_buffer)       #add buffer minutes to it
 
 
-
     def intersects_unavailable(self, time):
         for tuple in self.unavailable:
             start_time = tuple[0]
@@ -400,16 +380,7 @@ class Day:
                 return True
 
         return False
-        '''
-        unavail = 02:00pm - 04:00pm,  05:00pm - 07:00pm
-        event = 04:00pm - 06:00pm
 
-        nonwork: 02:00pm, 02:30pm, 03:00pm, 03:30pm, 04:00pm, 05:00pm, 05:30pm, 06:00pm, 06:30pm, 07:00pm
-        avail_range: 04:30pm, ...
-
-
-
-        '''
 
     def sched_shift(self, shift):
         #add shift to the shifts field, assuming all added shifts are already validated --> there will not be another shift with the same start_time
@@ -436,6 +407,7 @@ class Day:
 
             if time_counter_str in self.avail_range:
                 del self.avail_range[time_counter.strftime('%I:%M%p')]
+
             if intersects and (time_counter_str in self.nonwork_avail_range):
                 del self.nonwork_avail_range[time_counter.strftime('%I:%M%p')]
 
@@ -493,11 +465,11 @@ class Day:
     #Purpose: Works with choose_random_time(), validates whether a given duration from start_time to end_time is avail in self.avail_range
     def is_avail(self, is_work, start_time, end_time):
         time_counter = start_time
-        all_times = self.avail_range.keys()
+        all_times = list(self.avail_range.keys())
 
         #If shift is non-work --> able to schedule during nonworking hours (includes unavailability times):
         if is_work is False:
-            all_times.append(self.nonwork_avail_range.keys())
+            all_times.extend(list(self.nonwork_avail_range.keys()))
 
         #just check if each time string exists as a key in the avail_range list of keys, if not --> there must be some time thats needed that is unavail
         while time_counter <= end_time:
@@ -509,22 +481,24 @@ class Day:
 
 
     #Purpose: Pick a random available time of day for a Shift given the desired duration (in hrs), and random choosing size (how many random times to generate and chosse from)
+    #assume the shift is ONLY for work shifts, this method would only be used for scheduling
     def choose_random_time(self, choosing_size, duration_hrs):
         #avail_range already has every available time --> get them and choose by random:
         avail_hrs = list(self.avail_range.keys())
-        choosing_range = ()
+        choosing_range = []
 
         #Populate choosing_range with random VALID times until its size == choosing_size:
-        while len(choosing_range) < choosing_size:
+        while len(choosing_range) < choosing_size and len(avail_hrs) >= 1:
             #still assuming self.label will == format '%m/%d/%y'
             start_time_str = random.choice(avail_hrs)
             start_time = datetime.strptime((self.label + " " + start_time_str), '%m/%d/%y %I:%M%p')
             end_time = start_time + timedelta(hours=duration_hrs)
 
             #is it valid? yes --> add it to the choosing_range!
-            if self.is_avail(start_time, end_time):
+            if self.is_avail(True, start_time, end_time):
                 choosing_range.append(start_time)
-                avail_hrs.remove(start_time_str)
+
+            avail_hrs.remove(start_time_str)
 
         return random.choice(choosing_range)
 

@@ -1,5 +1,6 @@
 # Life-to-Work
 Personal project of mine! Scheduler for all my work to essentially "assign" me "work" shifts to keep me productive and on top of all adult things!
+<br><br>**Link not yet public:** http://lifetowork-jmnguyen1999.pythonanywhere.com/
 
 ## Things done so far: 
 - [x] Create user models and webpages to do some base login/logout functionalities
